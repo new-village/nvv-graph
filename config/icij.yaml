@@ -1,11 +1,15 @@
 sources:
   - table: nodes_entities
     path: data/nodes-entities.parquet
+    label: Entity
   - table: nodes_addresses
     path: data/nodes-addresses.parquet
+    label: Address
   - table: nodes_intermediaries
     path: data/nodes-intermediaries.parquet
+    label: Intermediary
   - table: nodes_officers
     path: data/nodes-officers.parquet
+    label: Officer
   - table: relationships
     path: data/relationships.parquet
