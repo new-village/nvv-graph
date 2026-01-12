@@ -28,13 +28,53 @@ def load_data(
         # Here we just use the path as defined in config.
         
         print(f"Loading {table_name} from {file_path}...")
-        # Use CREATE VIEW to avoid copying data (Zero-Copy)
-        conn.execute(f"CREATE OR REPLACE VIEW {table_name} AS SELECT * FROM '{file_path}'")
         
+        if table_name == "relationships":
+            # Relationships must be a TABLE for DuckPGQ
+            conn.execute(f"CREATE OR REPLACE TABLE {table_name} AS SELECT * FROM '{file_path}'")
+        else:
+            # Others can be VIEWS (Zero-Copy)
+            conn.execute(f"CREATE OR REPLACE VIEW {table_name} AS SELECT * FROM '{file_path}'")
+    
+    # Enable DuckPGQ
+    print("Enabling DuckPGQ extension...")
+    conn.execute("INSTALL duckpgq FROM community")
+    conn.execute("LOAD duckpgq")
+    
+    # Create unified nodes table for Property Graph (Materialized for DuckPGQ)
+    print("Creating unified 'nodes_all' table...")
+    # Select common columns and add type
+    conn.execute("""
+        CREATE OR REPLACE TABLE nodes_all AS 
+        SELECT node_id, name, 'Entity' as type FROM nodes_entities
+        UNION ALL
+        SELECT node_id, address as name, 'Address' as type FROM nodes_addresses
+        UNION ALL
+        SELECT node_id, name, 'Intermediary' as type FROM nodes_intermediaries
+        UNION ALL
+        SELECT node_id, name, 'Officer' as type FROM nodes_officers
+    """)
+
+    # Create Property Graph
+    print("Defining Property Graph 'icij_graph'...")
+    conn.execute("""
+        CREATE OR REPLACE PROPERTY GRAPH icij_graph
+        VERTEX TABLES (
+            nodes_all LABEL IcijNode
+        )
+        EDGE TABLES (
+            relationships 
+            SOURCE KEY (node_id_start) REFERENCES nodes_all (node_id)
+            DESTINATION KEY (node_id_end) REFERENCES nodes_all (node_id)
+            LABEL related_to
+        )
+    """)
+    
     return conn
 
 if __name__ == "__main__":
     # Test run
     con = load_data()
-    print("Data loaded successfully.")
+    print("Data loaded and Graph created successfully.")
     print("Tables:", con.execute("SHOW TABLES").fetchall())
+
