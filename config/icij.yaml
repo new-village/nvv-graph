@@ -1,0 +1,11 @@
+sources:
+  - table: nodes_entities
+    path: data/nodes-entities.parquet
+  - table: nodes_addresses
+    path: data/nodes-addresses.parquet
+  - table: nodes_intermediaries
+    path: data/nodes-intermediaries.parquet
+  - table: nodes_officers
+    path: data/nodes-officers.parquet
+  - table: relationships
+    path: data/relationships.parquet
