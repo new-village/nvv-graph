@@ -1,0 +1,62 @@
+{
+	"name": "nvv-graph Python 3.12",
+	"image": "mcr.microsoft.com/devcontainers/python:3.12",
+	
+	// Configure tool-specific properties
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"python.defaultInterpreterPath": "/usr/local/bin/python",
+				"python.linting.enabled": true,
+				"python.linting.pylintEnabled": true,
+				"python.formatting.autopep8Path": "/usr/local/py-utils/bin/autopep8",
+				"python.formatting.blackPath": "/usr/local/py-utils/bin/black",
+				"python.formatting.yapfPath": "/usr/local/py-utils/bin/yapf",
+				"python.linting.banditPath": "/usr/local/py-utils/bin/bandit",
+				"python.linting.flake8Path": "/usr/local/py-utils/bin/flake8",
+				"python.linting.mypyPath": "/usr/local/py-utils/bin/mypy",
+				"python.linting.pycodestylePath": "/usr/local/py-utils/bin/pycodestyle",
+				"python.linting.pydocstylePath": "/usr/local/py-utils/bin/pydocstyle",
+				"python.linting.pylintPath": "/usr/local/py-utils/bin/pylint"
+			},
+			"extensions": [
+				"ms-python.python",
+				"ms-python.vscode-pylance",
+				"ms-python.black-formatter"
+			]
+		}
+	},
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally
+	"forwardPorts": [8000],
+
+	// Use 'postCreateCommand' to run commands after the container is created
+	"postCreateCommand": "pip install --user -r requirements.txt",
+
+	// Configure mount for data directory
+	"mounts": [
+		"source=/data,target=/workspaces/nvv-graph/data,type=bind"
+	],
+
+	// Set environment variables optimized for DuckDB/SQLite data processing
+	"containerEnv": {
+		"PYTHONUNBUFFERED": "1",
+		"DUCKDB_PYTHON_VERSION": "3.12"
+	},
+
+	// Configure features for better performance
+	"features": {
+		"ghcr.io/devcontainers/features/common-utils:2": {
+			"installZsh": true,
+			"installOhMyZsh": true,
+			"configureZshAsDefaultShell": true,
+			"username": "vscode",
+			"userUid": "automatic",
+			"userGid": "automatic"
+		}
+	},
+
+	// Uncomment to connect as root instead
+	// "remoteUser": "root"
+	"remoteUser": "vscode"
+}
