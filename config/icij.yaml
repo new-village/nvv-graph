@@ -1,4 +1,4 @@
-processor: src.processor
+processor: src.icij_processor
 sources:
   - table: nodes_entities
     path: data/nodes-entities.csv
