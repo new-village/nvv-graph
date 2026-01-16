@@ -65,3 +65,26 @@
     "data": null
   }
   ```
+
+### GET `/node/{node_type}/{id}/neighbors`
+指定されたノードの周辺ノードおよびエッジを取得します。
+
+- **Parameters**:
+  - `node_type` (path): 起点ノードのタイプ (例: `officer`, `entity`)
+  - `id` (path): 起点ノードの ID
+  - `depth` (query, int, default=1): 探索する深さ。現在は `1` のみ動作を保証。
+  - `direction` (query, string, default=`both`): 探索方向。`both`, `in`, `out`。
+  - `limit` (query, int, default=100): 結果の最大数。
+
+- **Response**:
+  ```json
+  {
+    "nodes": [
+      { "id": "12000001", "node_type": "officer", "properties": { "name": "Officer A", ... } },
+      { "id": "11000001", "node_type": "entity", "properties": { "name": "Entity X", ... } }
+    ],
+    "edges": [
+      { "id": "rel_12000001_11000001", "source": "12000001", "target": "11000001", "type": "related_to_officer_entity" }
+    ]
+  }
+  ```
