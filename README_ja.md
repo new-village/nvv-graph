@@ -33,3 +33,35 @@
 1. プロジェクトを VS Code で開きます。
 2. プロンプトが表示されたら "Reopen in Container" を選択します。
 3. Python 3.14 環境と依存関係が自動的にセットアップされます。
+4. API サーバーを起動します:
+   ```bash
+   uvicorn src.main:app --reload
+   ```
+
+## 📡 API エンドポイント (API Endpoints)
+
+### GET `/node/{node_type}/{node_id}`
+指定された種別 (`node_type`) と ID (`node_id`) に一致するノード情報を取得します。
+
+- **Parameters**:
+  - `node_type` (path): `config/icij.yaml` の `label` で定義されたノード種別 (例: `Officer`, `Entity`)
+  - `node_id` (path): ノードのユニーク ID (例: `12000001`)
+- **Response**:
+  ```json
+  {
+    "count": 1,
+    "data": {
+      "node_id": 12000001,
+      "name": "Target Name",
+      ...
+    }
+  }
+  ```
+- **Not Found**:
+  対象レコードが存在しない場合、`count: 0, data: null` を返却します。
+  ```json
+  {
+    "count": 0,
+    "data": null
+  }
+  ```

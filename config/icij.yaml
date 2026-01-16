@@ -3,14 +3,18 @@ sources:
   - table: nodes_entities
     path: data/nodes-entities.csv
     label: Entity
+    id_field: node_id
   - table: nodes_addresses
     path: data/nodes-addresses.csv
     label: Address
+    id_field: node_id
   - table: nodes_intermediaries
     path: data/nodes-intermediaries.csv
     label: Intermediary
+    id_field: node_id
   - table: nodes_officers
     path: data/nodes-officers.csv
     label: Officer
+    id_field: node_id
   - table: relationships
     path: data/relationships.csv
