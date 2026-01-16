@@ -46,6 +46,7 @@
 - **Parameters**:
   - `node_type` (path): `config/icij.yaml` の `node_type` で定義されたノード種別 (例: `officer`, `entity`)
   - `id` (path): ノードのユニーク ID (例: `12000001`)
+
 - **Response**:
   ```json
   {
