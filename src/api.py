@@ -55,6 +55,7 @@ def get_node(
             raise e
         print(f"Database Error: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
+
 @router.get("/node/{node_type}/{id}/neighbors")
 def get_node_neighbors(
     node_type: str,
