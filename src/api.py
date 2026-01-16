@@ -15,7 +15,7 @@ def get_node(
     # 1. Resolve node_type to table and id_field
     target_source = None
     for source in config.get("sources", []):
-        if source.get("label") == node_type:
+        if source.get("node_type") == node_type:
             target_source = source
             break
     

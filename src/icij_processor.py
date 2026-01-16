@@ -15,13 +15,13 @@ def process_data(config: Dict[str, Any]) -> Dict[str, Any]:
     processed_sources = []
     
     # Track labels for enrichment
-    node_labels = {}
+    node_types = {}
     
     # 1. Convert Nodes CSV -> Parquet
     for source in config.get("sources", []):
         table_name = source["table"]
         file_path = source["path"]
-        label = source.get("label")
+        n_type = source.get("node_type")
         
         if table_name == "relationships":
             # Will handle specifically for enrichment
@@ -41,12 +41,12 @@ def process_data(config: Dict[str, Any]) -> Dict[str, Any]:
             source_copy["path"] = parquet_path
             processed_sources.append(source_copy)
             
-            if label:
-                node_labels[label] = parquet_path
+            if n_type:
+                node_types[n_type] = parquet_path
         else:
             processed_sources.append(source)
-            if label:
-                node_labels[label] = file_path
+            if n_type:
+                node_types[n_type] = file_path
 
     # 2. Process Relationships
     rel_source = next((s for s in config.get("sources", []) if s["table"] == "relationships"), None)
@@ -69,8 +69,9 @@ def process_data(config: Dict[str, Any]) -> Dict[str, Any]:
 
         # Create Mapping Table from the just-processed node files
         union_parts = []
-        for label, path in node_labels.items():
-            union_parts.append(f"SELECT node_id, '{label}' as label FROM '{path}'")
+        for n_type, path in node_types.items():
+            # Use n_type (lowercase from config) as label in the map
+            union_parts.append(f"SELECT node_id, '{n_type}' as label FROM '{path}'")
         
         if union_parts:
             create_map_query = f"CREATE OR REPLACE TABLE nodes_map AS {' UNION ALL '.join(union_parts)}"

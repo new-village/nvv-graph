@@ -39,42 +39,39 @@ def load_data(
     conn.execute("INSTALL duckpgq FROM community")
     conn.execute("LOAD duckpgq")
 
-    node_labels = {}
+    # Rename node_labels to node_types for clarity, but logic remains same
+    node_types = {}
     relationships_table = ""
     
     # 1. Load Tables from Config (Generic)
     for source in processed_config.get("sources", []):
         table_name = source["table"]
         file_path = source["path"]
-        label = source.get("label")
+        # CHANGE: label -> node_type
+        n_type = source.get("node_type")
         
         print(f"Loader: Loading {table_name} from {file_path}...")
         
         # Consistent approach: Create TEMP TABLE for everything
         conn.execute(f"CREATE OR REPLACE TEMP TABLE {table_name} AS SELECT * FROM '{file_path}'")
         
-        if label:
-            node_labels[label] = table_name
+        if n_type:
+            node_types[n_type] = table_name
         # Heuristic: if no label and table name suggests relationships, mark it
         elif table_name == "relationships":
             relationships_table = table_name
 
     # 2. Dynamic Property Graph Definition
-    # This logic assumes a Star Schema / Property Graph where edges connect labeled nodes
-    if relationships_table and node_labels:
+    if relationships_table and node_types:
         print("Loader: Defining Property Graph...")
         
         # Vertex Tables
         vertex_defs = []
-        for label, table in node_labels.items():
-            vertex_defs.append(f"{table} LABEL {label}")
+        for n_type, table in node_types.items():
+            # DuckPGQ LABEL matches node_type (now lowercase)
+            vertex_defs.append(f"{table} LABEL {n_type}")
         
         # Edge Tables
-        # Attempt to detect edge types from data if present (start_label, end_label columns)
-        # This part depends on the processor having enriched the data.
-        # If columns don't exist, we might fallback to generic edge?
-        # For now, we assume the Enrichment contract: relationships table has start_label/end_label.
-        
         try:
             combinations = conn.execute(f"""
                 SELECT DISTINCT start_label, end_label FROM {relationships_table}
@@ -82,7 +79,24 @@ def load_data(
             
             edge_defs = []
             for start_label, end_label in combinations:
-                rel_subname = f"rel_{start_label}_{end_label}"
+                # The data in 'relationships' table might still use old capitalized labels
+                # unless processor is also updated. Assuming processor updates labels too?
+                # Actually processor logic needs checking. 
+                # If processor writes 'Officer' but config says 'officer', we must map?
+                # Or we assume processor also lowercases or we just use whatever string is in data as part of edge name?
+                # The node_types dict keys are now lowercase (from config).
+                # If data has 'Officer', node_types['Officer'] will fail if keys are 'officer'.
+                # We need to handle case sensitivity match or ensure processor normalizes.
+                
+                # Let's normalize lookup to lowercase for safety if data is essentially case-insensitive
+                start_key = start_label.lower() 
+                end_key = end_label.lower()
+                
+                if start_key not in node_types or end_key not in node_types:
+                   print(f"Warning: Skipping edge {start_label}->{end_label} because node types not found in config.")
+                   continue
+
+                rel_subname = f"rel_{start_key}_{end_key}"
                 
                 # Materialize sub-tables (TEMP) for DuckPGQ compliance
                 conn.execute(f"""
@@ -91,14 +105,14 @@ def load_data(
                     WHERE start_label = '{start_label}' AND end_label = '{end_label}'
                 """)
                 
-                start_table = node_labels[start_label]
-                end_table = node_labels[end_label]
+                start_table = node_types[start_key]
+                end_table = node_types[end_key]
                 
                 edge_defs.append(f"""
                     {rel_subname}
                     SOURCE KEY (node_id_start) REFERENCES {start_table} (node_id)
                     DESTINATION KEY (node_id_end) REFERENCES {end_table} (node_id)
-                    LABEL related_to_{start_label}_{end_label}
+                    LABEL related_to_{start_key}_{end_key}
                 """)
             
             if edge_defs:

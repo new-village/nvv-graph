@@ -23,7 +23,7 @@ def test_load_data_creates_graph(mock_config):
         # We try to run a graph query.
         
         # Simple Graph Query: Match all Officer nodes
-        res = conn.execute("SELECT count(*) FROM GRAPH_TABLE (icij_graph MATCH (n:Officer))").fetchone()[0]
+        res = conn.execute("SELECT count(*) FROM GRAPH_TABLE (icij_graph MATCH (n:officer))").fetchone()[0]
         assert res > 0
 
 def test_graph_query_relationships(mock_config):
@@ -38,7 +38,7 @@ def test_graph_query_relationships(mock_config):
         query = """
         SELECT o_name, e_name 
         FROM GRAPH_TABLE (icij_graph 
-            MATCH (o:Officer)-[r:related_to_Officer_Entity]->(e:Entity)
+            MATCH (o:officer)-[r:related_to_officer_entity]->(e:entity)
             COLUMNS (o.name as o_name, e.name as e_name)
         )
         """
@@ -66,7 +66,7 @@ def test_graph_query_shortest_path(mock_config):
         query = """
         SELECT o_name, a_name
         FROM GRAPH_TABLE (icij_graph 
-            MATCH (o:Officer)-[r1:related_to_Officer_Entity]->(e:Entity)-[r2:related_to_Entity_Address]->(a:Address)
+            MATCH (o:officer)-[r1:related_to_officer_entity]->(e:entity)-[r2:related_to_entity_address]->(a:address)
             COLUMNS (o.name as o_name, a.name as a_name)
         )
         """

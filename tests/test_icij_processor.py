@@ -46,5 +46,5 @@ def test_process_data_enrichment(mock_config, test_data_dir):
     # Officer = 12000001 (Officer A) -> Entity = 11000001 (Entity X)
     row = df[(df["node_id_start"] == 12000001) & (df["node_id_end"] == 11000001)]
     assert not row.empty
-    assert row.iloc[0]["start_label"] == "Officer"
-    assert row.iloc[0]["end_label"] == "Entity"
+    assert row.iloc[0]["start_label"] == "officer"
+    assert row.iloc[0]["end_label"] == "entity"

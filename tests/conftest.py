@@ -47,22 +47,26 @@ def mock_config(test_data_dir: str):
             {
                 "table": "nodes_entities",
                 "path": os.path.join(test_data_dir, "nodes-entities.csv"),
-                "label": "Entity"
+                "node_type": "entity",
+                "id_field": "node_id"
             },
             {
                 "table": "nodes_addresses",
                 "path": os.path.join(test_data_dir, "nodes-addresses.csv"),
-                "label": "Address"
+                "node_type": "address",
+                "id_field": "node_id"
             },
             {
                 "table": "nodes_officers",
                 "path": os.path.join(test_data_dir, "nodes-officers.csv"),
-                "label": "Officer"
+                "node_type": "officer",
+                "id_field": "node_id"
             },
-             {
+            {
                 "table": "nodes_intermediaries",
                 "path": os.path.join(test_data_dir, "nodes-intermediaries.csv"),
-                "label": "Intermediary"
+                "node_type": "intermediary",
+                "id_field": "node_id"
             },
             {
                 "table": "relationships",
