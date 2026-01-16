@@ -4,10 +4,10 @@ from src.deps import get_db, get_config
 
 router = APIRouter()
 
-@router.get("/node/{node_type}/{node_id}")
+@router.get("/node/{node_type}/{id}")
 def get_node(
     node_type: str, 
-    node_id: str,
+    id: str,
     conn: duckdb.DuckDBPyConnection = Depends(get_db),
     config: dict = Depends(get_config)
 ):
@@ -40,7 +40,7 @@ def get_node(
         # described query allows getting column names.
         
         # Execute to get result
-        df = conn.execute(query, [node_id]).df()
+        df = conn.execute(query, [id]).df()
         
         if df.empty:
             return {"count": 0, "data": None}
