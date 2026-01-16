@@ -49,7 +49,7 @@
 - **Response**:
   ```json
   {
-    "total": 1,
+    "count": 1,
     "data": {
       "node_id": 12000001,
       "name": "Target Name",
@@ -58,10 +58,10 @@
   }
   ```
 - **Not Found**:
-  対象レコードが存在しない場合、`total: 0, data: null` を返却します。
+  対象レコードが存在しない場合、`count: 0, data: null` を返却します。
   ```json
   {
-    "total": 0,
+    "count": 0,
     "data": null
   }
   ```

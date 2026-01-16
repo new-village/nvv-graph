@@ -61,7 +61,7 @@ def test_get_node_officer_found(api_client):
     response = api_client.get("/node/Officer/12000001")
     assert response.status_code == 200
     res = response.json()
-    assert res["total"] == 1
+    assert res["count"] == 1
     assert res["data"]["node_id"] == 12000001
     assert res["data"]["name"] == "Officer A"
 
@@ -73,7 +73,7 @@ def test_get_node_entity_found(api_client):
     response = api_client.get("/node/Entity/11000001")
     assert response.status_code == 200
     res = response.json()
-    assert res["total"] == 1
+    assert res["count"] == 1
     assert res["data"]["node_id"] == 11000001
     assert res["data"]["name"] == "Entity X"
     assert res["data"]["jurisdiction"] == "BVI"
@@ -83,10 +83,10 @@ def test_get_node_not_found(api_client):
     Test getting a non-existent node.
     """
     response = api_client.get("/node/Officer/99999999")
-    # Should now return 200 with total 0
+    # Should now return 200 with count 0
     assert response.status_code == 200
     res = response.json()
-    assert res["total"] == 0
+    assert res["count"] == 0
     assert res["data"] is None
 
 def test_get_node_invalid_type(api_client):

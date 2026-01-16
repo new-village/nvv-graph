@@ -43,12 +43,12 @@ def get_node(
         df = conn.execute(query, [node_id]).df()
         
         if df.empty:
-            return {"total": 0, "data": None}
+            return {"count": 0, "data": None}
         
         # Convert first row to dict
         record = df.iloc[0].replace({float('nan'): None}).to_dict()
         
-        return {"total": 1, "data": record}
+        return {"count": 1, "data": record}
 
     except Exception as e:
         if isinstance(e, HTTPException):
