@@ -74,26 +74,21 @@ def load_data(
         # Edge Tables
         try:
             combinations = conn.execute(f"""
-                SELECT DISTINCT start_label, end_label FROM {relationships_table}
+                SELECT DISTINCT start_node_type, end_node_type FROM {relationships_table}
             """).fetchall()
             
             edge_defs = []
-            for start_label, end_label in combinations:
+            for start_type, end_type in combinations:
                 # The data in 'relationships' table might still use old capitalized labels
-                # unless processor is also updated. Assuming processor updates labels too?
-                # Actually processor logic needs checking. 
-                # If processor writes 'Officer' but config says 'officer', we must map?
-                # Or we assume processor also lowercases or we just use whatever string is in data as part of edge name?
-                # The node_types dict keys are now lowercase (from config).
-                # If data has 'Officer', node_types['Officer'] will fail if keys are 'officer'.
-                # We need to handle case sensitivity match or ensure processor normalizes.
+                # unless processor is also updated. 
+                # We updated processor to use lowercase node_type.
                 
-                # Let's normalize lookup to lowercase for safety if data is essentially case-insensitive
-                start_key = start_label.lower() 
-                end_key = end_label.lower()
+                # Let's normalize lookup to lowercase for safety
+                start_key = start_type.lower() 
+                end_key = end_type.lower()
                 
                 if start_key not in node_types or end_key not in node_types:
-                   print(f"Warning: Skipping edge {start_label}->{end_label} because node types not found in config.")
+                   print(f"Warning: Skipping edge {start_type}->{end_type} because node types not found in config.")
                    continue
 
                 rel_subname = f"rel_{start_key}_{end_key}"
@@ -102,7 +97,7 @@ def load_data(
                 conn.execute(f"""
                     CREATE OR REPLACE TEMP TABLE {rel_subname} AS 
                     SELECT * FROM {relationships_table} 
-                    WHERE start_label = '{start_label}' AND end_label = '{end_label}'
+                    WHERE start_node_type = '{start_type}' AND end_node_type = '{end_type}'
                 """)
                 
                 start_table = node_types[start_key]

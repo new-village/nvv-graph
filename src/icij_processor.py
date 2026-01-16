@@ -70,8 +70,8 @@ def process_data(config: Dict[str, Any]) -> Dict[str, Any]:
         # Create Mapping Table from the just-processed node files
         union_parts = []
         for n_type, path in node_types.items():
-            # Use n_type (lowercase from config) as label in the map
-            union_parts.append(f"SELECT node_id, '{n_type}' as label FROM '{path}'")
+            # Use n_type (lowercase from config) as node_type in the map
+            union_parts.append(f"SELECT node_id, '{n_type}' as node_type FROM '{path}'")
         
         if union_parts:
             create_map_query = f"CREATE OR REPLACE TABLE nodes_map AS {' UNION ALL '.join(union_parts)}"
@@ -82,8 +82,8 @@ def process_data(config: Dict[str, Any]) -> Dict[str, Any]:
                 CREATE OR REPLACE TABLE relationships_typed AS 
                 SELECT 
                     r.*,
-                    s.label as start_label,
-                    e.label as end_label
+                    s.node_type as start_node_type,
+                    e.node_type as end_node_type
                 FROM relationships_raw r
                 JOIN nodes_map s ON r.node_id_start = s.node_id
                 JOIN nodes_map e ON r.node_id_end = e.node_id

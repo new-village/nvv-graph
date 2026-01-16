@@ -39,12 +39,12 @@ def test_process_data_enrichment(mock_config, test_data_dir):
     df = conn.execute(f"SELECT * FROM '{rel_path}'").df()
     
     # Check columns exist
-    assert "start_label" in df.columns
-    assert "end_label" in df.columns
+    assert "start_node_type" in df.columns
+    assert "end_node_type" in df.columns
     
     # Verify specific row content (Officer -> Entity)
     # Officer = 12000001 (Officer A) -> Entity = 11000001 (Entity X)
     row = df[(df["node_id_start"] == 12000001) & (df["node_id_end"] == 11000001)]
     assert not row.empty
-    assert row.iloc[0]["start_label"] == "officer"
-    assert row.iloc[0]["end_label"] == "entity"
+    assert row.iloc[0]["start_node_type"] == "officer"
+    assert row.iloc[0]["end_node_type"] == "entity"
