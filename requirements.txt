@@ -14,3 +14,6 @@ passlib[bcrypt]>=1.7.4
 
 # Type hints and validation
 pydantic>=2.9.0
+pytest>=8.0.0
+pandas>=2.0.0
+numpy>=1.20.0

@@ -1,0 +1,3 @@
+node_id,name,jurisdiction,jurisdiction_description,country_codes,countries,incorporation_date,inactivation_date,struck_off_date,closed_date,ibcRUC,status,company_type,service_provider,sourceID,valid_until,note
+11000001,Entity X,BVI,British Virgin Islands,BVI,British Virgin Islands,19-OCT-2000,,,,,,Active,,Intermediary A,Pandora Papers,The Pandora Papers data is current through 2020,
+11000002,Entity Y,BVI,British Virgin Islands,BVI,British Virgin Islands,19-OCT-2000,,,,,,Active,,Intermediary A,Pandora Papers,The Pandora Papers data is current through 2020,
