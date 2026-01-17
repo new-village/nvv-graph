@@ -20,7 +20,7 @@
 - **Containerization**: Dev Container / Docker
 
 ### Key Features
-- **Configurable Data Sources**: Source paths and schemas are defined in `config/sources.yaml`, separating configuration from code.
+- **Simple Data Access**: Directly references `data/nodes.parquet` and `data/edges.parquet`, removing the need for complex configuration files.
 - **Secure Authentication**: OAuth2 + JWT based authentication.
 - **Persistence**: Usage of external volume mounts for persisting Auth/Audit logs while keeping the compute container stateless.
 

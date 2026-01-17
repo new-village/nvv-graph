@@ -20,7 +20,7 @@
 - **コンテナ化**: Dev Container / Docker
 
 ### 主な機能 (Key Features)
-- **構成可能なデータソース**: パスやスキーマ定義は `config/sources.yaml` で外部定義し、コードから分離しています。
+- **シンプルなデータ参照**: `data/nodes.parquet` と `data/edges.parquet` を直接参照し、構成ファイルを廃止しました。
 - **セキュアな認証**: OAuth2 + JWT による認証機能を搭載しています。
 - **永続化戦略**: 計算コンテナをステートレスに保ちつつ、認証・監査ログの永続化には外部ボリュームマウントを使用します。
 
@@ -40,11 +40,11 @@
 
 ## 📡 API エンドポイント (API Endpoints)
 
-### GET `/node/{node_type}/{id}`
+### GET `/nodes/{node_type}/{id}`
 指定された種別 (`node_type`) と ID (`id`) に一致するノード情報を取得します。
 
 - **Parameters**:
-  - `node_type` (path): `config/icij.yaml` の `node_type` で定義されたノード種別 (例: `officer`, `entity`)
+  - `node_type` (path): ノード種別 (例: `officer`, `entity`)。データ内の `node_type` カラムと一致する必要があります。
   - `id` (path): ノードのユニーク ID (例: `12000001`)
 - **Response**:
   ```json
@@ -66,7 +66,7 @@
   }
   ```
 
-### GET `/node/{node_type}/{id}/neighbors`
+### GET `/nodes/{node_type}/{id}/neighbors`
 指定されたノードの周辺ノードおよびエッジを取得します。起点ノード自体はレスポンスの `nodes` に含まれません。
 
 - **Parameters**:
@@ -87,7 +87,7 @@
   }
   ```
 
-### GET `/node/{node_type}/{id}/neighbors/count`
+### GET `/nodes/{node_type}/{id}/neighbors/count`
 指定されたノードの隣接ノードの総数と、ノードタイプごとの内訳を取得します。
 
 - **Parameters**:

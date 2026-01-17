@@ -7,7 +7,8 @@
 
 ## 2. データ構造と管理 (Data Structure & Management)
 - **データソース管理:**
-  - パスやスキーマ定義は `config/sources.yaml` で外部定義し、コードから分離する。
+- **データソース管理:**
+  - `data/nodes.parquet` および `data/edges.parquet` を直接参照する。configファイルによる定義は廃止。
 - **データベース構成:**
   - **Main Engine:** DuckDB (DuckPGQ 拡張) による高速分析。
   - **Auth/Audit Store:** MVPでは **SQLite** を使用。
@@ -22,8 +23,8 @@
 - **Authentication & Authorization:**
   - OAuth2 + JWT による認証。SQLAlchemy を通じてユーザー情報および監査ログを管理する。
 - **主要 API Endpoints:**
-  - `GET /node/{node_type}/{id}`
-  - `GET /node/{node_type}/{id}/neighbors`
+  - `GET /nodes/{node_type}/{id}`
+  - `GET /nodes/{node_type}/{id}/neighbors`
   - `POST /graph/search`
   - `POST /auth/login` / `GET /auth/me` / `DELETE /auth/logout`
 
