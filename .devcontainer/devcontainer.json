@@ -38,7 +38,8 @@
 	// Set environment variables optimized for DuckDB/SQLite data processing
 	"containerEnv": {
 		"PYTHONUNBUFFERED": "1",
-		"DUCKDB_PYTHON_VERSION": "3.14"
+		"DUCKDB_PYTHON_VERSION": "3.14",
+		"DATA_DIR": "/workspaces/yata-graph/data"
 	},
 	// Configure features for better performance
 	"features": {
