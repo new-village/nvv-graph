@@ -27,6 +27,16 @@ def process_data(config: Dict[str, Any]) -> Dict[str, Any]:
             # Will handle specifically for enrichment
             continue
 
+        # Check file existence
+        if not os.path.exists(file_path) and file_path.endswith(".csv"):
+             # Fallback to parquet
+             parquet_path = file_path.replace(".csv", ".parquet")
+             if os.path.exists(parquet_path):
+                 print(f"Notice: {file_path} not found. Using {parquet_path}...")
+                 file_path = parquet_path
+                 # Update config reference
+                 source["path"] = parquet_path
+
         if file_path.endswith(".csv"):
             parquet_path = file_path.replace(".csv", ".parquet")
             
@@ -44,6 +54,7 @@ def process_data(config: Dict[str, Any]) -> Dict[str, Any]:
             if n_type:
                 node_types[n_type] = parquet_path
         else:
+            # Already parquet or other format
             processed_sources.append(source)
             if n_type:
                 node_types[n_type] = file_path
@@ -52,6 +63,13 @@ def process_data(config: Dict[str, Any]) -> Dict[str, Any]:
     rel_source = next((s for s in config.get("sources", []) if s["table"] == "relationships"), None)
     if rel_source:
         rel_path = rel_source["path"]
+        
+        # Check existence and fallback
+        if not os.path.exists(rel_path) and rel_path.endswith(".csv"):
+             parquet_path = rel_path.replace(".csv", ".parquet")
+             if os.path.exists(parquet_path):
+                 print(f"Notice: {rel_path} not found. Using {parquet_path}...")
+                 rel_path = parquet_path
         # Output as relationships.parquet as requested (overwriting if it was the input? No, Input is csv)
         # If input is .csv, output is .parquet.
         # If input is already .parquet, we might be enriching it again? 
