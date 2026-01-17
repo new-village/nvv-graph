@@ -50,7 +50,8 @@
 			"username": "vscode",
 			"userUid": "automatic",
 			"userGid": "automatic"
-		}
+		},
+		"ghcr.io/devcontainers/features/github-cli:1": {}
 	},
 	// Uncomment to connect as root instead
 	// "remoteUser": "root"

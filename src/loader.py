@@ -36,7 +36,7 @@ def load_data(
     
     # Enable DuckPGQ extensions
     print("Enabling DuckPGQ extension...")
-    conn.execute("INSTALL duckpgq FROM community")
+    # Extension is pre-installed in Docker image (offline mode)
     conn.execute("LOAD duckpgq")
 
     # Rename node_labels to node_types for clarity, but logic remains same
