@@ -7,23 +7,25 @@ from src.icij_processor import process_data
 class TestPathResolution(unittest.TestCase):
     @patch('src.icij_processor.duckdb')
     @patch('src.icij_processor.os')
-    def test_absolute_path_fallback(self, mock_os, mock_duckdb):
-        # Setup mock behavior
+    def test_default_data_dir_fallback(self, mock_os, mock_duckdb):
+        # Test default behavior: DATA_DIR defaults to "/data"
         mock_os.getcwd.return_value = "/app"
+        
+        # Mock os.environ.get to return default if key not found
+        def environ_get(key, default=None):
+            return default
+        mock_os.environ.get.side_effect = environ_get
         
         # Scenario: data/foo.csv missing, but /data/foo.csv exists
         def exists_side_effect(path):
-            if path == "data/foo.csv": return False
             if path == "/data/foo.csv": return True
-            if path == "data/foo.parquet": return False
-            if path == "/data/foo.parquet": return False
             return False
             
         mock_os.path.exists.side_effect = exists_side_effect
         mock_os.path.join.side_effect = os.path.join
-        mock_os.path.dirname.return_value = "data"
+        mock_os.path.basename.side_effect = os.path.basename
         
-        # Execute
+        # Config uses relative path
         config = {
             "sources": [
                 {"table": "foo", "path": "data/foo.csv", "node_type": "foo"}
@@ -31,22 +33,58 @@ class TestPathResolution(unittest.TestCase):
         }
         result = process_data(config)
         
-        # Verify
+        # Should resolve to /data/foo.parquet (because CSV is converted)
         processed_path = result["sources"][0]["path"]
         print(f"Original path: data/foo.csv -> Resolved path: {processed_path}")
-        # The processor converts/points to the parquet file
         self.assertEqual(processed_path, "/data/foo.parquet")
 
     @patch('src.icij_processor.duckdb')
     @patch('src.icij_processor.os')
-    def test_absolute_parquet_fallback(self, mock_os, mock_duckdb):
-        # Scenario: data/foo.csv missing, /data/foo.csv missing, but /data/foo.parquet exists
+    def test_env_var_fallback(self, mock_os, mock_duckdb):
+        # Scenario: DATA_DIR set to /custom/data
+        mock_os.getcwd.return_value = "/app"
+        
+        def environ_get(key, default=None):
+            if key == "DATA_DIR": return "/custom/data"
+            return default
+        mock_os.environ.get.side_effect = environ_get
+        
+        # /custom/data/foo.csv exists
         def exists_side_effect(path):
-            if path == "/data/foo.parquet": return True
+            if path == "/custom/data/foo.csv": return True
             return False
             
         mock_os.path.exists.side_effect = exists_side_effect
         mock_os.path.join.side_effect = os.path.join
+        mock_os.path.basename.side_effect = os.path.basename
+        
+        config = {
+            "sources": [
+                {"table": "foo", "path": "data/foo.csv", "node_type": "foo"}
+            ]
+        }
+        result = process_data(config)
+        
+        # Verify resolution + conversion
+        processed_path = result["sources"][0]["path"]
+        self.assertEqual(processed_path, "/custom/data/foo.parquet")
+
+    @patch('src.icij_processor.duckdb')
+    @patch('src.icij_processor.os')
+    def test_env_var_parquet_fallback(self, mock_os, mock_duckdb):
+        # Scenario: CSV missing, but Parquet exists in custom DATA_DIR
+        def environ_get(key, default=None):
+            if key == "DATA_DIR": return "/custom/data"
+            return default
+        mock_os.environ.get.side_effect = environ_get
+
+        def exists_side_effect(path):
+            if path == "/custom/data/foo.parquet": return True
+            return False
+            
+        mock_os.path.exists.side_effect = exists_side_effect
+        mock_os.path.join.side_effect = os.path.join
+        mock_os.path.basename.side_effect = os.path.basename
         
         config = {
             "sources": [
@@ -57,7 +95,7 @@ class TestPathResolution(unittest.TestCase):
         
         processed_path = result["sources"][0]["path"]
         print(f"Original path: data/foo.csv -> Resolved path: {processed_path}")
-        self.assertEqual(processed_path, "/data/foo.parquet")
+        self.assertEqual(processed_path, "/custom/data/foo.parquet")
 
 if __name__ == '__main__':
     unittest.main()
