@@ -41,7 +41,7 @@ USER appuser
 
 # Pre-install DuckDB extensions (Best Practice for Cloud Run / Containers)
 # efficiently caches the extension in the image provided HOME is writable (checked by -m earlier)
-RUN python -c "import duckdb; con = duckdb.connect(); con.install_extension('duckpgq'); con.load_extension('duckpgq')"
+RUN python -c "import duckdb; con = duckdb.connect(); con.execute('INSTALL duckpgq FROM community'); con.execute('LOAD duckpgq')"
 
 # Expose port
 EXPOSE 8080
