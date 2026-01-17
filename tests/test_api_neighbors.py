@@ -53,7 +53,7 @@ def test_get_neighbors_officer_both(api_client):
     Direction 'both' should find Entity X.
     Start node (Officer A) should NOT be in 'nodes' list.
     """
-    response = api_client.get("/node/officer/12000001/neighbors?direction=both")
+    response = api_client.get("/api/v1/nodes/officer/12000001/neighbors?direction=both")
     assert response.status_code == 200
     res = response.json()
     
@@ -73,7 +73,7 @@ def test_get_neighbors_officer_both(api_client):
 
 def test_get_neighbors_direction_out(api_client):
     # Officer A -> Entity X
-    response = api_client.get("/node/officer/12000001/neighbors?direction=out")
+    response = api_client.get("/api/v1/nodes/officer/12000001/neighbors?direction=out")
     assert response.status_code == 200
     res = response.json()
     assert len(res["nodes"]) == 1
@@ -83,7 +83,7 @@ def test_get_neighbors_direction_out(api_client):
 def test_get_neighbors_direction_in(api_client):
     # Officer A -> Entity X
     # In to Officer A should find nothing
-    response = api_client.get("/node/officer/12000001/neighbors?direction=in")
+    response = api_client.get("/api/v1/nodes/officer/12000001/neighbors?direction=in")
     assert response.status_code == 200
     res = response.json()
     assert len(res["edges"]) == 0
@@ -92,7 +92,7 @@ def test_get_neighbors_direction_in(api_client):
 def test_get_neighbors_entity_in(api_client):
     # Entity X (11000001) <- Officer A
     # In to Entity X should find Officer A
-    response = api_client.get("/node/entity/11000001/neighbors?direction=in")
+    response = api_client.get("/api/v1/nodes/entity/11000001/neighbors?direction=in")
     assert response.status_code == 200
     res = response.json()
     node_ids = {n["id"] for n in res["nodes"]}
@@ -103,12 +103,12 @@ def test_get_neighbors_entity_in(api_client):
 
 def test_get_neighbors_invalid_node_type(api_client):
     # Expect 400
-    response = api_client.get("/node/invalid/123/neighbors")
+    response = api_client.get("/api/v1/nodes/invalid/123/neighbors")
     assert response.status_code == 400
 
 def test_get_neighbors_count_officer(api_client):
     # Officer A -> Entity X
-    response = api_client.get("/node/officer/12000001/neighbors/count?direction=both")
+    response = api_client.get("/api/v1/nodes/officer/12000001/neighbors/count?direction=both")
     assert response.status_code == 200
     res = response.json()
     assert res["count"] == 1
@@ -116,7 +116,7 @@ def test_get_neighbors_count_officer(api_client):
 
 def test_get_neighbors_count_entity_in(api_client):
     # Entity X <- Officer A
-    response = api_client.get("/node/entity/11000001/neighbors/count?direction=in")
+    response = api_client.get("/api/v1/nodes/entity/11000001/neighbors/count?direction=in")
     assert response.status_code == 200
     res = response.json()
     assert res["count"] == 1

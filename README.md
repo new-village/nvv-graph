@@ -1,8 +1,8 @@
-# nvv-graph
+# yata-graph
 
-**A High-Performance Graph Search Backend using DuckDB/DuckPGQ**
+[Japanese](./README_ja.md)
 
-`nvv-graph` is a backend container service optimized for analytical and graph queries. It leverages DuckDB (with DuckPGQ extension) for high-speed graph traversals and SQLite for authentication and audit logging, all wrapped in a modern FastAPI application.
+`yata-graph` is a backend container service optimized for analytical and graph queries. It leverages DuckDB (with DuckPGQ extension) for high-speed graph traversals and SQLite for authentication and audit logging, all wrapped in a modern FastAPI application.
 
 ## 🚀 Project Goal
 

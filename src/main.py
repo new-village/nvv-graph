@@ -17,9 +17,9 @@ async def lifespan(app: FastAPI):
     if deps.conn:
         deps.conn.close()
 
-app = FastAPI(title="NVV Graph API", description="DuckDB/DuckPGQ backed Graph API", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="Yata Graph API", description="DuckDB/DuckPGQ backed Graph API", version="0.1.0", lifespan=lifespan)
 
-app.include_router(api_router)
+app.include_router(api_router, prefix="/api/v1")
 
 if __name__ == "__main__":
     import uvicorn

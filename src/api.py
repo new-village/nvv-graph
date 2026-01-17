@@ -4,7 +4,7 @@ from src.deps import get_db, get_config
 
 router = APIRouter()
 
-@router.get("/node/{node_type}/{id}")
+@router.get("/nodes/{node_type}/{id}")
 def get_node(
     node_type: str, 
     id: str,
@@ -56,7 +56,7 @@ def get_node(
         print(f"Database Error: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
-@router.get("/node/{node_type}/{id}/neighbors")
+@router.get("/nodes/{node_type}/{id}/neighbors")
 def get_node_neighbors(
     node_type: str,
     id: str,
@@ -222,7 +222,7 @@ def get_node_neighbors(
         print(f"Graph Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/node/{node_type}/{id}/neighbors/count")
+@router.get("/nodes/{node_type}/{id}/neighbors/count")
 def get_node_neighbors_count(
     node_type: str,
     id: str,

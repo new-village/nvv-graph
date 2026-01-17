@@ -1,6 +1,6 @@
 # Dev Container Setup
 
-This directory contains the VS Code Dev Container configuration for the nvv-graph project.
+This directory contains the VS Code Dev Container configuration for the yata-graph project.
 
 ## Features
 
@@ -13,11 +13,11 @@ This directory contains the VS Code Dev Container configuration for the nvv-grap
   - Pandas & PyArrow - Data processing optimization
   - Pydantic - Type validation
 
-- **Data Volume Mount**: Host's `/data` directory is automatically mounted to `/workspaces/nvv-graph/data`
+- **Data Volume Mount**: Host's `/data` directory is automatically mounted to `/workspaces/yata-graph/data`
 - **Port Forwarding**: Port 8000 is forwarded for FastAPI application
-- **Optimized Environment**: 
-  - `PYTHONUNBUFFERED=1` for real-time logging
-  - `DUCKDB_PYTHON_VERSION=3.12` for version compatibility
+- **Base Image**: Python 3.14 (Bullseye)
+- **Docker-in-Docker**: Supported for container operations
+- **Data Volume Mount**: Host's `/data` directory is automatically mounted to `/workspaces/yata-graph/data`
 
 ## Usage
 
@@ -27,9 +27,26 @@ This directory contains the VS Code Dev Container configuration for the nvv-grap
 4. Wait for the container to build and dependencies to install
 5. Start developing!
 
-## Data Directory
+## Mount Configuration
 
-The Dev Container is configured to mount the host's `/data` directory to `/workspaces/nvv-graph/data` for DuckDB/SQLite data processing.
+The Dev Container is configured to mount the host's `/data` directory to `/workspaces/yata-graph/data` for DuckDB/SQLite data processing.
+
+If you are on Windows/Mac or need a different path:
+1. Open `devcontainer.json`
+2. Update the `mounts` section:
+   ```json
+   // Example for Windows
+   "mounts": [
+       "source=C:\\data,target=/workspaces/yata-graph/data,type=bind"
+   ]
+   ```
+   or
+   ```json
+   // Example for Custom Linux Path
+   "mounts": [
+    "source=/your/custom/path,target=/workspaces/yata-graph/data,type=bind"
+   ]
+   ```
 
 ### Linux/macOS Setup
 
@@ -46,7 +63,7 @@ On Windows, the `/data` path won't work directly. You have two options:
 1. **Modify the mount in `devcontainer.json`** to use a Windows path:
    ```json
    "mounts": [
-       "source=C:\\data,target=/workspaces/nvv-graph/data,type=bind"
+       "source=C:\\data,target=/workspaces/yata-graph/data,type=bind"
    ]
    ```
 
@@ -61,6 +78,6 @@ On Windows, the `/data` path won't work directly. You have two options:
 To use a different location, modify line 38 in `.devcontainer/devcontainer.json`:
 ```json
 "mounts": [
-    "source=/your/custom/path,target=/workspaces/nvv-graph/data,type=bind"
+    "source=/your/custom/path,target=/workspaces/yata-graph/data,type=bind"
 ]
 ```

@@ -52,7 +52,7 @@ def test_get_node_officer_found(api_client):
     Test getting an existing Officer node.
     Officer A has node_id 12000001
     """
-    response = api_client.get("/node/officer/12000001")
+    response = api_client.get("/api/v1/nodes/officer/12000001")
     assert response.status_code == 200
     res = response.json()
     assert res["count"] == 1
@@ -64,7 +64,7 @@ def test_get_node_entity_found(api_client):
     Test getting an existing Entity node.
     Entity X has node_id 11000001
     """
-    response = api_client.get("/node/entity/11000001")
+    response = api_client.get("/api/v1/nodes/entity/11000001")
     assert response.status_code == 200
     res = response.json()
     assert res["count"] == 1
@@ -76,7 +76,7 @@ def test_get_node_not_found(api_client):
     """
     Test getting a non-existent node.
     """
-    response = api_client.get("/node/officer/99999999")
+    response = api_client.get("/api/v1/nodes/officer/99999999")
     # Should now return 200 with count 0
     assert response.status_code == 200
     res = response.json()
@@ -87,6 +87,6 @@ def test_get_node_invalid_type(api_client):
     """
     Test getting a node with invalid type.
     """
-    response = api_client.get("/node/invalidtype/123")
+    response = api_client.get("/api/v1/nodes/invalidtype/123")
     assert response.status_code == 400
     assert "Invalid node_type" in response.json()["detail"]
