@@ -4,19 +4,21 @@ from src.deps import get_db
 
 router = APIRouter()
 
-@router.get("/nodes/{node_type}/{id}")
+@router.get("/nodes/{id}")
 def get_node(
-    node_type: str, 
     id: str,
     conn: duckdb.DuckDBPyConnection = Depends(get_db)
 ):
     """
-    Fetch a node by type and ID directly from the nodes table.
+    Fetch a node by ID directly from the nodes table.
     """
-    query = "SELECT * FROM nodes WHERE node_type = ? AND id = ?"
-    
     try:
-        df = conn.execute(query, [node_type, id]).df()
+        # Validate ID is a number to match DB schema (BIGINT)
+        if not id.isdigit():
+            return {"count": 0, "data": None}
+
+        query = "SELECT * FROM nodes WHERE id = ?"
+        df = conn.execute(query, [id]).df()
         
         if df.empty:
             return {"count": 0, "data": None}
@@ -34,9 +36,8 @@ def get_node(
         print(f"Database Error: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
-@router.get("/nodes/{node_type}/{id}/neighbors")
+@router.get("/nodes/{id}/neighbors")
 def get_node_neighbors(
-    node_type: str,
     id: str,
     depth: int = 1,
     direction: str = "both",
@@ -49,6 +50,10 @@ def get_node_neighbors(
     # Verify node existence first? Optional, but good practice.
     # For now, let's just query edges.
     
+    # Validate ID is a number
+    if not id.isdigit():
+        return {"nodes": [], "edges": []}
+
     # We are looking for edges where source_id = id OR target_id = id
     # And we need to filter by direction.
     
@@ -154,9 +159,8 @@ def get_node_neighbors(
         print(f"Graph Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/nodes/{node_type}/{id}/neighbors/count")
+@router.get("/nodes/{id}/neighbors/count")
 def get_node_neighbors_count(
-    node_type: str,
     id: str,
     direction: str = "both",
     conn: duckdb.DuckDBPyConnection = Depends(get_db)

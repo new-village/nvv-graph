@@ -45,7 +45,7 @@ app = FastAPI(title="Yata Graph API", description="Parquet-backed Graph API", ve
 # Unclear if they meant /api/v1/nodes/officer or /nodes/officer.
 # The original code had /api/v1. I'll stick to /api/v1 but mention it.
 
-app.include_router(api_router)
+app.include_router(api_router, prefix="/api/v1")
 
 # Also mount at root as the user examples omitted /api/v1 prefix often?
 # Or just stick to one. I will stick to /api/v1. (Actually user examples in previous prompts might have omitted it for brevity).

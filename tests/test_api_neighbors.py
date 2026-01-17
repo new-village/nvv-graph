@@ -9,7 +9,7 @@ def test_get_neighbors_officer_both(api_client):
     Direction 'both' should find Entity X.
     Start node (Officer A) should NOT be in 'nodes' list.
     """
-    response = api_client.get("/nodes/officer/12000001/neighbors?direction=both")
+    response = api_client.get("/api/v1/nodes/12000001/neighbors?direction=both")
     assert response.status_code == 200
     res = response.json()
     
@@ -39,7 +39,7 @@ def test_get_neighbors_officer_both(api_client):
 
 def test_get_neighbors_direction_out(api_client):
     # Officer A -> Entity X
-    response = api_client.get("/nodes/officer/12000001/neighbors?direction=out")
+    response = api_client.get("/api/v1/nodes/12000001/neighbors?direction=out")
     assert response.status_code == 200
     res = response.json()
     assert len(res["nodes"]) == 1
@@ -49,7 +49,7 @@ def test_get_neighbors_direction_out(api_client):
 def test_get_neighbors_direction_in(api_client):
     # Officer A -> Entity X
     # In to Officer A should find nothing (unless there's incoming)
-    response = api_client.get("/nodes/officer/12000001/neighbors?direction=in")
+    response = api_client.get("/api/v1/nodes/12000001/neighbors?direction=in")
     assert response.status_code == 200
     res = response.json()
     assert len(res["edges"]) == 0
@@ -58,7 +58,7 @@ def test_get_neighbors_direction_in(api_client):
 def test_get_neighbors_entity_in(api_client):
     # Entity X (11000001) <- Officer A
     # In to Entity X should find Officer A
-    response = api_client.get("/nodes/entity/11000001/neighbors?direction=in")
+    response = api_client.get("/api/v1/nodes/11000001/neighbors?direction=in")
     assert response.status_code == 200
     res = response.json()
     node_ids = {n["id"] for n in res["nodes"]}
@@ -67,18 +67,9 @@ def test_get_neighbors_entity_in(api_client):
     assert len(res["nodes"]) == 1
     assert len(res["edges"]) == 1
 
-def test_get_neighbors_invalid_node_type_returns_empty(api_client):
-    # Now returns empty list as we don't strictly validate type table existence (simplified)
-    # or if we do, it returns 400?
-    # Logic in api.py: 'nodes' table scan with node_type filter.
-    # Neighbor query: edges e join nodes n where e.source = id.
-    # It doesn't use node_type of SOURCE in the query filter (only e.source_id = ?).
-    # Wait, api.py neighbor query: 
-    # `SELECT ... FROM edges e JOIN nodes n ...`
-    # It filters `WHERE e.source_id = ?`.
-    # It doesn't validate that source_id IS of node_type.
-    
-    response = api_client.get("/nodes/invalid/123/neighbors")
+def test_get_neighbors_invalid_id_returns_empty(api_client):
+    # Valid ID lookup will return empty if not found or no neighbors
+    response = api_client.get("/api/v1/nodes/invalid123/neighbors")
     assert response.status_code == 200
     res = response.json()
     assert res["nodes"] == []
@@ -86,7 +77,7 @@ def test_get_neighbors_invalid_node_type_returns_empty(api_client):
 
 def test_get_neighbors_count_officer(api_client):
     # Officer A -> Entity X
-    response = api_client.get("/nodes/officer/12000001/neighbors/count?direction=both")
+    response = api_client.get("/api/v1/nodes/12000001/neighbors/count?direction=both")
     assert response.status_code == 200
     res = response.json()
     assert res["count"] == 1
@@ -94,10 +85,11 @@ def test_get_neighbors_count_officer(api_client):
 
 def test_get_neighbors_count_entity_in(api_client):
     # Entity X <- Officer A
-    response = api_client.get("/nodes/entity/11000001/neighbors/count?direction=in")
+    response = api_client.get("/api/v1/nodes/11000001/neighbors/count?direction=in")
     assert response.status_code == 200
     res = response.json()
     assert res["count"] == 1
     assert res["details"].get("officer") == 1
+
 
 

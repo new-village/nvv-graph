@@ -1,15 +1,16 @@
 import duckdb
+from src.loader import load_data
 
-# Global State
-conn: duckdb.DuckDBPyConnection = None
-config: dict = None
+# Singleton connection
+_db_connection = None
 
 def get_db():
-    if conn is None:
-        raise RuntimeError("Database not initialized")
-    return conn
+    """
+    Dependency to get the DuckDB connection.
+    Lazy loads if not already initialized.
+    """
+    global _db_connection
+    if _db_connection is None:
+        _db_connection = load_data()
+    return _db_connection
 
-def get_config():
-    if config is None:
-        raise RuntimeError("Config not initialized")
-    return config
