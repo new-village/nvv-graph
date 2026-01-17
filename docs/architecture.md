@@ -1,4 +1,4 @@
-# nvv-graph Basic Architecture Specification
+# yata-graph Basic Architecture Specification
 
 ## 1. プロジェクトの目的 (Project Goal)
 - 機密性の高いデータを対象とした、DuckDB/DuckPGQ による高速なグラフ探索バックエンドを構築する。
