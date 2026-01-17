@@ -97,5 +97,43 @@ class TestPathResolution(unittest.TestCase):
         print(f"Original path: data/foo.csv -> Resolved path: {processed_path}")
         self.assertEqual(processed_path, "/custom/data/foo.parquet")
 
+    @patch('src.icij_processor.duckdb')
+    @patch('src.icij_processor.os')
+    def test_reverse_fallback_postgres_to_csv(self, mock_os, mock_duckdb):
+        # Scenario: Config says .parquet (data/foo.parquet).
+        # File missing.
+        # But data/foo.csv exists.
+        # Processor should find CSV, convert it, and point to .parquet.
+        
+        mock_os.getcwd.return_value = "/app"
+        # Return default env
+        def environ_get(key, default=None):
+            return default
+        mock_os.environ.get.side_effect = environ_get
+
+        def exists_side_effect(path):
+            if path == "data/foo.parquet": return False
+            if path == "data/foo.csv": return True
+            return False
+            
+        mock_os.path.exists.side_effect = exists_side_effect
+        mock_os.path.join.side_effect = os.path.join
+        mock_os.path.basename.side_effect = os.path.basename
+        
+        # Config uses .parquet
+        config = {
+            "sources": [
+                {"table": "foo", "path": "data/foo.parquet", "node_type": "foo"}
+            ]
+        }
+        result = process_data(config)
+        
+        # Expectation: 
+        # 1. Finds data/foo.csv
+        # 2. Converts to data/foo.parquet
+        # 3. Returns data/foo.parquet as path
+        processed_path = result["sources"][0]["path"]
+        self.assertEqual(processed_path, "data/foo.parquet")
+
 if __name__ == '__main__':
     unittest.main()

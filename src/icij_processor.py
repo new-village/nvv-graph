@@ -49,13 +49,38 @@ def process_data(config: Dict[str, Any]) -> Dict[str, Any]:
              print(f"Notice: Found file in DATA_DIR: {env_path}")
              file_path = env_path
              source["path"] = env_path
-        # Priority 2: Check $DATA_DIR/filename.parquet (fallback)
+        # Priority 2: Check $DATA_DIR/filename.parquet (fallback if config was csv)
         elif file_path.endswith(".csv"):
              env_parquet = os.path.join(data_dir, filename.replace(".csv", ".parquet"))
              if os.path.exists(env_parquet):
                  print(f"Notice: Found parquet in DATA_DIR: {env_parquet}")
                  file_path = env_parquet
                  source["path"] = env_parquet
+        # Priority 2b: Check $DATA_DIR/filename.csv (fallback if config is parquet but we only have csv)
+        elif file_path.endswith(".parquet"):
+             env_csv = os.path.join(data_dir, filename.replace(".parquet", ".csv"))
+             if os.path.exists(env_csv):
+                 print(f"Notice: Configured parquet missing, but found CSV in DATA_DIR: {env_csv}")
+                 # We don't change source["path"] yet, because we want to convert it to the requested parquet path
+                 # But for 'file_path' variable which tracks "source input", we use the CSV.
+                 # The conversion logic block below needs to know we intend to output to 'path' (parquet) from 'file_path' (csv).
+                 
+                 # Let's say config path is `data/nodes.parquet`.
+                 # We found `data/nodes.csv`.
+                 # We want to read `data/nodes.csv` and write to `data/nodes.parquet`.
+                 
+                 # Current logic below:
+                 # if file_path.endswith(".csv"): ... convert ...
+                 
+                 # So if we set file_path = env_csv, the block below will trigger.
+                 # But we also need to make sure the OUTPUT path (parquet_path below) is correct.
+                 file_path = env_csv
+                 # We do NOT update source["path"] to the CSV, because the rest of the app might expect parquet if configured so?
+                 # Actually, config source["path"] is used by loader to READ.
+                 # If we convert it here, we should point source["path"] to the resulting PARQUET file.
+                 # The original config was ALREADY parquet. So source["path"] is already correct (parquet).
+                 # modifying file_path to csv ensures existence check passes.
+
         
         # Priority 3: Original path (relative) - Fallthrough to existing logic check
 
@@ -70,14 +95,26 @@ def process_data(config: Dict[str, Any]) -> Dict[str, Any]:
              if os.path.exists(parquet_path):
                  print(f"Notice: {file_path} not found. Using {parquet_path}...")
                  file_path = parquet_path
-                 # Update config reference
                  source["path"] = parquet_path
                  found = True
+        elif file_path.endswith(".parquet"):
+              # Fallback to csv (Reverse fallback for relative paths)
+              csv_path = file_path.replace(".parquet", ".csv")
+              if os.path.exists(csv_path):
+                  print(f"Notice: {file_path} not found. Using {csv_path} for conversion...")
+                  file_path = csv_path
+                  found = True
 
         if not found:
             # DEBUG: Log directory contents to help diagnose Cloud Run mount issues
             dir_path = os.path.dirname(file_path) or "."
+            # If we fall back to DATA_DIR logging
+            if not os.path.exists(dir_path) and os.environ.get("DATA_DIR"):
+                 dir_path = os.environ.get("DATA_DIR")
+            
             print(f"ERROR: File not found: {file_path}")
+            print(f"DEBUG: DATA_DIR: {os.environ.get('DATA_DIR', '/data')}")
+
             if os.path.exists(dir_path):
                 print(f"DEBUG: Contents of directory '{dir_path}':")
                 try:
@@ -91,6 +128,9 @@ def process_data(config: Dict[str, Any]) -> Dict[str, Any]:
             raise FileNotFoundError(f"Required data file not found: {file_path}. See log for directory contents.")
 
         if file_path.endswith(".csv"):
+            # Determine target parquet path
+            # If config was originally parquet (e.g. data/nodes.parquet), file_path is currently data/nodes.csv
+            # We want to write to data/nodes.parquet
             parquet_path = file_path.replace(".csv", ".parquet")
             
             # Simple check: if csv exists, convert it.
@@ -108,6 +148,7 @@ def process_data(config: Dict[str, Any]) -> Dict[str, Any]:
                 node_types[n_type] = parquet_path
         else:
             # Already parquet or other format
+            # Ensure source points to the valid parquet path if we started with configured parquet
             processed_sources.append(source)
             if n_type:
                 node_types[n_type] = file_path
