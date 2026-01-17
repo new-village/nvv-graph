@@ -1,6 +1,6 @@
 {
 	"name": "yata-graph Python 3.14",
-	"image": "mcr.microsoft.com/devcontainers/python:1-3.14-bullseye",
+	"image": "mcr.microsoft.com/devcontainers/python:3.14-bookworm",
 	// Configure tool-specific properties
 	"customizations": {
 		"vscode": {
@@ -33,7 +33,7 @@
 	"postCreateCommand": "pip install -r requirements.txt",
 	// Configure mount for data directory
 	"mounts": [
-		"source=/data,target=/workspaces/yata-graph/data,type=bind"
+		"source=${localWorkspaceFolder}/data,target=/workspaces/yata-graph/data,type=bind"
 	],
 	// Set environment variables optimized for DuckDB/SQLite data processing
 	"containerEnv": {
