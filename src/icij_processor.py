@@ -27,6 +27,25 @@ def process_data(config: Dict[str, Any]) -> Dict[str, Any]:
             # Will handle specifically for enrichment
             continue
 
+        # Debug: Print CWD once
+        if len(processed_sources) == 0:
+             print(f"DEBUG: Current Working Directory: {os.getcwd()}")
+
+        # Check for absolute path fallback (e.g. if config says 'data/foo.csv' but file is at '/data/foo.csv')
+        if not os.path.exists(file_path) and not file_path.startswith("/"):
+             abs_path = os.path.join("/", file_path)
+             if os.path.exists(abs_path):
+                 print(f"Notice: Found file at absolute path {abs_path}")
+                 file_path = abs_path
+                 source["path"] = abs_path
+             # Also check if the parquet version exists at absolute path even if csv doesn't
+             elif file_path.endswith(".csv"):
+                 abs_parquet = os.path.join("/", file_path.replace(".csv", ".parquet"))
+                 if os.path.exists(abs_parquet):
+                     print(f"Notice: Found parquet at absolute path {abs_parquet}")
+                     file_path = abs_parquet
+                     source["path"] = abs_parquet
+
         # Check file existence
         found = False
         if os.path.exists(file_path):
@@ -84,6 +103,18 @@ def process_data(config: Dict[str, Any]) -> Dict[str, Any]:
     if rel_source:
         rel_path = rel_source["path"]
         
+        # Check for absolute path fallback
+        if not os.path.exists(rel_path) and not rel_path.startswith("/"):
+             abs_path = os.path.join("/", rel_path)
+             if os.path.exists(abs_path):
+                 print(f"Notice: Found relationship file at absolute path {abs_path}")
+                 rel_path = abs_path
+             elif rel_path.endswith(".csv"):
+                 abs_parquet = os.path.join("/", rel_path.replace(".csv", ".parquet"))
+                 if os.path.exists(abs_parquet):
+                     print(f"Notice: Found relationship parquet at absolute path {abs_parquet}")
+                     rel_path = abs_parquet
+
         # Check existence and fallback
         found_rel = False
         if os.path.exists(rel_path):
