@@ -1,9 +1,86 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request, Query
 import duckdb
 from src.deps import get_db
-from src.schemas import NodeResponse, NeighborsResponse, NeighborsCountResponse, Node, Edge, SchemaResponse, ColumnInfo
+from src.schemas import NodeResponse, NeighborsResponse, NeighborsCountResponse, Node, Edge, SchemaResponse, ColumnInfo, SearchResponse
+from typing import Optional
 
 router = APIRouter()
+
+@router.get("/search", response_model=SearchResponse)
+def search_nodes(
+    request: Request,
+    table: str = "nodes",
+    fuzzy: bool = False,
+    limit: int = Query(25, le=100),
+    offset: int = Query(0, ge=0),
+    conn: duckdb.DuckDBPyConnection = Depends(get_db)
+):
+    """
+    Search nodes or edges by arbitrary columns.
+    Example: /search?display_name=Apple&fuzzy=true
+    """
+    try:
+        # Validate table name to prevent injection
+        if table not in ["nodes", "edges"]:
+            raise HTTPException(status_code=400, detail="Invalid table name. Must be 'nodes' or 'edges'.")
+
+        # Get schema to validate columns
+        # We could cache this, but for now DESCRIBE is fast enough for loose schema
+        schema_df = conn.execute(f"DESCRIBE {table}").df()
+        valid_columns = set(schema_df["column_name"].tolist())
+        
+        # Parse query params
+        # Exclude reserved params
+        reserved = ["table", "fuzzy", "limit", "offset"]
+        search_params = {k: v for k, v in request.query_params.items() if k not in reserved}
+        
+        if not search_params:
+            return {"count": 0, "results": []}
+            
+        # Build Query
+        conditions = []
+        params = []
+        
+        for col, val in search_params.items():
+            if col not in valid_columns:
+                raise HTTPException(status_code=400, detail=f"Invalid column: {col}")
+            
+            if fuzzy:
+                # ILIKE for fuzzy search
+                conditions.append(f"{col} ILIKE ?")
+                params.append(f"%{val}%")
+            else:
+                # Exact match
+                # Check data type? DuckDB handles string to int casting usually, 
+                # but we should be careful. 
+                # For now rely on DuckDB's parameterized query casting.
+                conditions.append(f"{col} = ?")
+                params.append(val)
+                
+        where_clause = " AND ".join(conditions)
+        
+        query = f"SELECT * FROM {table} WHERE {where_clause} LIMIT ? OFFSET ?"
+        params.append(limit)
+        params.append(offset)
+        
+        df = conn.execute(query, params).df()
+        
+        results = []
+        if not df.empty:
+            # Convert NaN to None
+            results = df.replace({float('nan'): None}).to_dict(orient="records")
+            
+        return {
+            "count": len(results),
+            "results": results
+        }
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        print(f"Search Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/schema", response_model=SchemaResponse)
 def get_schema(

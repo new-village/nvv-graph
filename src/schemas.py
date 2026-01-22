@@ -37,3 +37,8 @@ class SchemaResponse(BaseModel):
     nodes: List[ColumnInfo] = Field(..., description="Schema definition for nodes table")
     edges: List[ColumnInfo] = Field(..., description="Schema definition for edges table")
 
+class SearchResponse(BaseModel):
+    count: int = Field(..., description="Number of results found")
+    results: List[Dict[str, Any]] = Field(..., description="List of search results (nodes or edges)")
+
+
