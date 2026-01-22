@@ -16,8 +16,8 @@ def test_get_neighbors_officer_both(api_client):
     # Verify Nodes
     # Expect 1 node: Entity X
     node_ids = {n["id"] for n in res["nodes"]}
-    assert "11000001" in node_ids
-    assert "12000001" not in node_ids
+    assert 11000001 in node_ids
+    assert 12000001 not in node_ids
     assert len(res["nodes"]) == 1
     
     # Verify Edges
@@ -25,8 +25,8 @@ def test_get_neighbors_officer_both(api_client):
     edge = res["edges"][0]
     # Source/target are IDs. Check expected values.
     # We normalized edge storage in conftest but API query logic uses edges table.
-    assert edge["source"] == "12000001"
-    assert edge["target"] == "11000001"
+    assert edge["source"] == 12000001
+    assert edge["target"] == 11000001
     # edge type in parquet fixture logic was 'officer_entity' or similar from CSV. 
     # CSV relationships.csv: start, end, type
     # 'related_to_officer_entity' might be missing if raw csv just has type.
@@ -43,7 +43,7 @@ def test_get_neighbors_direction_out(api_client):
     assert response.status_code == 200
     res = response.json()
     assert len(res["nodes"]) == 1
-    assert res["nodes"][0]["id"] == "11000001"
+    assert res["nodes"][0]["id"] == 11000001
     assert len(res["edges"]) == 1
 
 def test_get_neighbors_direction_in(api_client):
@@ -62,8 +62,8 @@ def test_get_neighbors_entity_in(api_client):
     assert response.status_code == 200
     res = response.json()
     node_ids = {n["id"] for n in res["nodes"]}
-    assert "12000001" in node_ids
-    assert "11000001" not in node_ids
+    assert 12000001 in node_ids
+    assert 11000001 not in node_ids
     assert len(res["nodes"]) == 1
     assert len(res["edges"]) == 1
 

@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 import duckdb
 from src.deps import get_db
+from src.schemas import NodeResponse, NeighborsResponse, NeighborsCountResponse, Node, Edge
 
 router = APIRouter()
 
-@router.get("/nodes/{id}")
+@router.get("/nodes/{id}", response_model=NodeResponse)
 def get_node(
     id: str,
     conn: duckdb.DuckDBPyConnection = Depends(get_db)
@@ -17,8 +18,13 @@ def get_node(
         if not id.isdigit():
             return {"count": 0, "data": None}
 
+        # Convert input id to int for safe comparisons/usage if needed, 
+        # though DuckDB query param handles string digits fine usually. 
+        # But consistency is good.
+        node_id_int = int(id)
+
         query = "SELECT * FROM nodes WHERE id = ?"
-        df = conn.execute(query, [id]).df()
+        df = conn.execute(query, [node_id_int]).df()
         
         if df.empty:
             return {"count": 0, "data": None}
@@ -26,9 +32,8 @@ def get_node(
         # Convert first row to dict and handle None/NaN
         record = df.iloc[0].replace({float('nan'): None}).to_dict()
         
-        # Ensure ID is treated consistently, possibly as string in response if originally string in API
-        # The parquet schema has ID as BIGINT. API expects ID in URL.
-        # We return what's in the DB.
+        # Ensure ID is treated consistently
+        # The parquet schema has ID as BIGINT.
         
         return {"count": 1, "data": record}
 
@@ -36,7 +41,7 @@ def get_node(
         print(f"Database Error: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
-@router.get("/nodes/{id}/neighbors")
+@router.get("/nodes/{id}/neighbors", response_model=NeighborsResponse)
 def get_node_neighbors(
     id: str,
     depth: int = 1,
@@ -47,20 +52,15 @@ def get_node_neighbors(
     Fetch neighbors specifically from edges table.
     We need to join edges with nodes table to get neighbor details.
     """
-    # Verify node existence first? Optional, but good practice.
-    # For now, let's just query edges.
     
     # Validate ID is a number
     if not id.isdigit():
         return {"nodes": [], "edges": []}
 
+    node_id_int = int(id)
+
     # We are looking for edges where source_id = id OR target_id = id
     # And we need to filter by direction.
-    
-    # Note: 'id' param is str, but DB id is likely BIGINT. DuckDB usually handles auto-cast 
-    # but explicit cast or binding is safer.
-    
-    limit = 500 # Safety limit
     
     try:
         # Base query for edges
@@ -102,7 +102,7 @@ def get_node_neighbors(
         full_query = " UNION ALL ".join(queries)
         
         # Params: we need to pass 'id' for each query part
-        params = [id] * len(queries)
+        params = [node_id_int] * len(queries)
         
         df = conn.execute(full_query, params).df()
         
@@ -114,39 +114,40 @@ def get_node_neighbors(
         
         for _, row in df.iterrows():
             # Process Neighbor Node
-            nid = str(row["neighbor_id"])
-            if nid not in seen_nodes:
-                # Extract all properties
-                # We excluded id, node_type, display_name from wildcard to handle them explicitly without collision?
-                # Actually DuckDB 'EXCLUDE' keeps them out of star.
-                # So we take specific columns + remaining.
-                
-                pass
-                
-            # Let's simplify row processing
-            row_dict = row.replace({float('nan'): None}).to_dict()
+            # neighbor_id comes as int (BIGINT) from DuckDB DF if schema is correct
+            nid = row["neighbor_id"]
             
-            # neighbor
-            neigh_id = str(row_dict["neighbor_id"])
-            if neigh_id not in seen_nodes:
+            # Key for set should be consistent (int)
+            if nid not in seen_nodes:
+                # Let's simplify row processing
+                row_dict = row.replace({float('nan'): None}).to_dict()
+                
                 # Construct node object
                 node_obj = {
-                    "id": neigh_id,
+                    "id": nid, # Keep as int
                     "node_type": row_dict["neighbor_type"],
                     "display_name": row_dict["neighbor_name"],
                     "properties": {k: v for k, v in row_dict.items() if k not in ["dir", "edge_id", "edge_type", "neighbor_id", "neighbor_type", "neighbor_name"]}
                 }
                 nodes_list.append(node_obj)
-                seen_nodes.add(neigh_id)
+                seen_nodes.add(nid)
+            
+            row_dict = row.replace({float('nan'): None}).to_dict()
             
             # Edge
-            # We want to represent standard source/target format
-            edge_id = str(row_dict["edge_id"])
+            # edge_id comes as int
+            edge_id = row_dict["edge_id"]
+            
+            # Determine source/target using numeric IDs
+            # If dir is out, source is Me (node_id_int), target is Neighbor (nid)
+            src_val = node_id_int if row_dict["dir"] == 'out' else nid
+            tgt_val = nid if row_dict["dir"] == 'out' else node_id_int
+            
             edge_obj = {
                 "id": edge_id,
                 "type": row_dict["edge_type"],
-                "source": id if row_dict["dir"] == 'out' else neigh_id,
-                "target": neigh_id if row_dict["dir"] == 'out' else id
+                "source": src_val,
+                "target": tgt_val
             }
             edges_list.append(edge_obj)
             
@@ -159,14 +160,19 @@ def get_node_neighbors(
         print(f"Graph Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/nodes/{id}/neighbors/count")
-
+@router.get("/nodes/{id}/neighbors/count", response_model=NeighborsCountResponse)
 def get_node_neighbors_count(
     id: str,
     direction: str = "both",
     conn: duckdb.DuckDBPyConnection = Depends(get_db)
 ):
     try:
+        # Validate ID
+        if not id.isdigit():
+             return {"count": 0, "details": {}}
+             
+        node_id_int = int(id)
+
         # Aggregation of neighbors by type
         # Similarly, OUT and IN
         
@@ -193,7 +199,7 @@ def get_node_neighbors_count(
             """)
             
         full_query = " UNION ALL ".join(queries)
-        params = [id] * len(queries)
+        params = [node_id_int] * len(queries)
         
         df = conn.execute(full_query, params).df()
         
